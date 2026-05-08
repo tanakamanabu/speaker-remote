@@ -60,6 +60,13 @@ python client.py
 SERVER_URL=http://192.168.1.40:8000/voice WAKEWORD_THRESHOLD=0.6 python client.py
 ```
 
+Alexa で反応させたい場合は、`alexa_v0.1.tflite` を使って起動してください。
+（同名ファイルを `client.py` と同じディレクトリに置くか、フルパスで指定）
+
+```bash
+WAKEWORD_MODEL_PATH=alexa_v0.1.tflite python client.py
+```
+
 推論バックエンドは既定で `tflite` を使います（安定動作用）。
 必要な場合のみ `onnx` へ切り替えてください。
 

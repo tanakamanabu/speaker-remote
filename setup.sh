@@ -10,6 +10,31 @@ MIC_CARD="${MIC_CARD:-ArrayUAC10}"
 SPEAKER_CARD="${SPEAKER_CARD:-Speaker}"
 ASOUNDRC_PATH="${ASOUNDRC_PATH:-$HOME/.asoundrc}"
 
+run_as_root() {
+  if [ "${EUID:-$(id -u)}" -eq 0 ]; then
+    "$@"
+    return
+  fi
+
+  if command -v sudo >/dev/null 2>&1; then
+    sudo "$@"
+    return
+  fi
+
+  echo "この処理には root 権限が必要です。root で実行するか sudo をインストールしてください。" >&2
+  exit 1
+}
+
+ensure_apt_packages() {
+  local packages=("$@")
+
+  echo "APT パッケージを確認し、不足分をインストールします..."
+  run_as_root apt update
+  run_as_root apt install -y "${packages[@]}"
+}
+
+ensure_apt_packages python3-venv python3-full pkg-config portaudio19-dev
+
 echo "[1/4] Python 仮想環境を準備します..."
 if [ ! -d "$VENV_DIR" ]; then
   python3 -m venv "$VENV_DIR"
@@ -23,10 +48,7 @@ if [ ! -x "$VENV_PYTHON" ]; then
 fi
 
 if ! "$VENV_PYTHON" -m pip --version >/dev/null 2>&1; then
-  echo "仮想環境内の pip が見つかりません。" >&2
-  echo "Raspberry Pi OS では python3-venv / python3-full が不足していると発生します。" >&2
-  echo "次を実行してから venv を作り直してください:" >&2
-  echo "  sudo apt update && sudo apt install -y python3-venv python3-full" >&2
+  echo "仮想環境内の pip が見つかりません。venv を作り直してください。" >&2
   echo "  rm -rf ${VENV_DIR} && bash setup.sh" >&2
   exit 1
 fi

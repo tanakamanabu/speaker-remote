@@ -16,11 +16,15 @@ if [ ! -d "$VENV_DIR" ]; then
 fi
 
 echo "[2/4] 依存パッケージをインストールします..."
-# shellcheck disable=SC1091
-source "$VENV_DIR/bin/activate"
-python -m pip install --upgrade pip
+VENV_PYTHON="$VENV_DIR/bin/python"
+if [ ! -x "$VENV_PYTHON" ]; then
+  echo "仮想環境の Python が見つかりません: $VENV_PYTHON" >&2
+  exit 1
+fi
+
+"$VENV_PYTHON" -m pip install --upgrade pip
 PIP_EXTRA_INDEX_URL="${PIP_EXTRA_INDEX_URL:-https://www.piwheels.org/simple}"
-python -m pip install --prefer-binary --extra-index-url "$PIP_EXTRA_INDEX_URL" -r requirements.txt
+"$VENV_PYTHON" -m pip install --prefer-binary --extra-index-url "$PIP_EXTRA_INDEX_URL" -r requirements.txt
 
 echo "[3/4] 音声デバイス設定（~/.asoundrc）を作成/更新します..."
 cat > "$ASOUNDRC_PATH" <<EOF

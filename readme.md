@@ -121,6 +121,23 @@ ctl.!default {
 Raspberry Pi OS ではグローバルな `pip install` が制限されています。
 必ず仮想環境（venv）を使用してください。
 
+`source venv/bin/activate` 後でも同じエラーが出る場合は、`pip` が仮想環境のものを見ていない可能性があります。
+その場合は必ず次のように実行してください。
+
+```bash
+venv/bin/python -m pip install -r requirements.txt
+```
+
+確認コマンド:
+
+```bash
+which python
+which pip
+python -m pip --version
+```
+
+`.../venv/bin/...` を指していればOKです。
+
 ### `numpy` のインストールで失敗する場合
 
 `requirements.txt` では `numpy<2` を指定しています。

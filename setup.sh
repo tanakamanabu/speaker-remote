@@ -9,6 +9,7 @@ VENV_DIR="${VENV_DIR:-venv}"
 MIC_CARD="${MIC_CARD:-ArrayUAC10}"
 SPEAKER_CARD="${SPEAKER_CARD:-Speaker}"
 ASOUNDRC_PATH="${ASOUNDRC_PATH:-$HOME/.asoundrc}"
+UV_BIN=""
 
 run_as_root() {
   if [ "${EUID:-$(id -u)}" -eq 0 ]; then
@@ -48,6 +49,37 @@ ensure_apt_packages() {
   fi
 }
 
+ensure_uv() {
+  if command -v uv >/dev/null 2>&1; then
+    UV_BIN="$(command -v uv)"
+    return
+  fi
+
+  if [ -x "$HOME/.local/bin/uv" ]; then
+    UV_BIN="$HOME/.local/bin/uv"
+    return
+  fi
+
+  echo "uv が見つからないためインストールします..."
+  if command -v curl >/dev/null 2>&1; then
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+  elif command -v wget >/dev/null 2>&1; then
+    wget -qO- https://astral.sh/uv/install.sh | sh
+  else
+    echo "uv のインストールに curl または wget が必要です。" >&2
+    exit 1
+  fi
+
+  if [ -x "$HOME/.local/bin/uv" ]; then
+    UV_BIN="$HOME/.local/bin/uv"
+  elif command -v uv >/dev/null 2>&1; then
+    UV_BIN="$(command -v uv)"
+  else
+    echo "uv のインストールに失敗しました。" >&2
+    exit 1
+  fi
+}
+
 ensure_portaudio_build_env() {
   if ! pkg-config --exists portaudio-2.0; then
     echo "portaudio-2.0 が見つかりません。APT インストールに失敗している可能性があります。" >&2
@@ -73,13 +105,13 @@ ensure_portaudio_build_env() {
   export LDFLAGS="${LDFLAGS:-} ${libs}"
 }
 
-ensure_apt_packages python3-venv python3-full build-essential pkg-config portaudio19-dev
+ensure_apt_packages build-essential pkg-config portaudio19-dev curl
+ensure_uv
 ensure_portaudio_build_env
 
 echo "[1/4] Python 仮想環境を準備します..."
-if [ ! -d "$VENV_DIR" ]; then
-  python3 -m venv "$VENV_DIR"
-fi
+"$UV_BIN" python install 3.11
+"$UV_BIN" venv --python 3.11 "$VENV_DIR"
 
 echo "[2/4] 依存パッケージをインストールします..."
 VENV_PYTHON="$VENV_DIR/bin/python"
@@ -100,7 +132,6 @@ case "$PIP_VERSION_OUTPUT" in
   *)
     echo "仮想環境外の pip を参照している可能性があります: $PIP_VERSION_OUTPUT" >&2
     echo "次を実行してから venv を作り直してください:" >&2
-    echo "  sudo apt update && sudo apt install -y python3-venv python3-full" >&2
     echo "  rm -rf ${VENV_DIR} && bash setup.sh" >&2
     exit 1
     ;;

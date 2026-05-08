@@ -136,12 +136,22 @@ venv/bin/python -m pip install -r requirements.txt
 ```
 
 それでも `externally-managed-environment` が出る場合は、壊れた仮想環境を掴んでいる可能性があります。
-`setup.sh` は `python3-venv` / `python3-full` を自動インストールするため、次で作り直してください。
+`setup.sh` は `uv` で Python 3.11 を用意して仮想環境を再構築するため、次で作り直してください。
 
 ```bash
 rm -rf venv
 bash setup.sh
 ```
+
+`openwakeword` 実行時に Python 3.13 系でクラッシュする場合は、`setup.sh` を再実行してください。
+`setup.sh` は `uv` 経由で Python 3.11 を導入し、その Python で `venv` を作成します。
+
+```bash
+rm -rf venv
+bash setup.sh
+```
+
+`setup.sh` は Python 3.11 / 3.10 を APT で直接インストールしません。
 
 確認コマンド:
 
@@ -154,13 +164,11 @@ python -m pip --version
 `.../venv/bin/...` を指していればOKです。
 
 ### `numpy` のインストールで失敗する場合
-
-`requirements.txt` では `numpy<2` を指定しています。
-さらに `setup.sh` は binary wheel を優先し、既定で `piwheels` を使うため、ソースビルド由来の失敗を回避しやすくなっています。
+`setup.sh` は binary wheel を優先し、既定で `piwheels` を使うため、ソースビルド由来の失敗を回避しやすくなっています。
 
 ### `PyAudio` のインストールで `portaudio.h` エラーが出る場合
 
-`setup.sh` は `build-essential`（gcc など）/ `portaudio19-dev` / `pkg-config` を事前に自動インストールしてから Python 依存を入れます。
+`setup.sh` は `build-essential`（gcc など）/ `portaudio19-dev` / `pkg-config`（+ `uv` 導入用の `curl`）を事前に自動インストールしてから Python 依存を入れます。
 さらに `pkg-config` から取得した `CFLAGS` / `LDFLAGS` を使って `PyAudio` をビルドするため、ヘッダ探索パス差異がある環境でも失敗しにくくしています。
 APT パッケージは1件ずつ導入し、失敗したパッケージ名を表示して停止します。
 このため通常は手動対応不要です。`sudo` が使えない環境では root で `setup.sh` を実行してください。

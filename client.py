@@ -84,14 +84,31 @@ def run_wakeword_loop(threshold=WAKEWORD_THRESHOLD):
         inference_framework=OWW_INFERENCE_FRAMEWORK,
     )
 
-    audio = pyaudio.PyAudio()
-    stream = audio.open(
-        format=pyaudio.paInt16,
-        channels=1,
-        rate=SAMPLE_RATE,
-        input=True,
-        frames_per_buffer=CHUNK_SIZE,
-    )
+    audio = None
+    stream = None
+
+    def open_input_stream():
+        nonlocal audio, stream
+        audio = pyaudio.PyAudio()
+        stream = audio.open(
+            format=pyaudio.paInt16,
+            channels=1,
+            rate=SAMPLE_RATE,
+            input=True,
+            frames_per_buffer=CHUNK_SIZE,
+        )
+
+    def close_input_stream():
+        nonlocal audio, stream
+        if stream is not None:
+            stream.stop_stream()
+            stream.close()
+            stream = None
+        if audio is not None:
+            audio.terminate()
+            audio = None
+
+    open_input_stream()
 
     print("ウェイクワード待機中...")
     try:
@@ -100,11 +117,11 @@ def run_wakeword_loop(threshold=WAKEWORD_THRESHOLD):
             prediction = model.predict(frame)
 
             if any(score >= threshold for score in prediction.values()):
+                close_input_stream()
                 yield
+                open_input_stream()
     finally:
-        stream.stop_stream()
-        stream.close()
-        audio.terminate()
+        close_input_stream()
 
 def main():
     ensure_wakeword_models()

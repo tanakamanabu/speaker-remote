@@ -99,30 +99,7 @@ OWW_INFERENCE_FRAMEWORK=onnx python client.py
 USBデバイスを固定するため、`~/.asoundrc` を設定してください。
 
 `setup.sh` 実行時に `~/.asoundrc` は自動生成・更新されます。
-手動で設定する場合は以下を利用してください。
-
-```conf
-pcm.!default {
-  type asym
-  playback.pcm "speaker"
-  capture.pcm "mic"
-}
-
-pcm.speaker {
-  type plug
-  slave.pcm "plughw:CARD=Speaker,DEV=0"
-}
-
-pcm.mic {
-  type plug
-  slave.pcm "plughw:CARD=ArrayUAC10,DEV=0"
-}
-
-ctl.!default {
-  type hw
-  card "Speaker"
-}
-```
+手動で設定する場合は.asoundrcを使用して下さい
 
 ※ `aplay -L` / `arecord -l` でデバイス名は確認できます。
 

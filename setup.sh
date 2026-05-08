@@ -27,13 +27,54 @@ run_as_root() {
 
 ensure_apt_packages() {
   local packages=("$@")
+  local failed_packages=()
+  local package
 
   echo "APT パッケージを確認し、不足分をインストールします..."
   run_as_root apt update
-  run_as_root apt install -y "${packages[@]}"
+
+  for package in "${packages[@]}"; do
+    echo "APT インストール: ${package}"
+    if ! run_as_root env DEBIAN_FRONTEND=noninteractive apt install -y "$package"; then
+      failed_packages+=("$package")
+      echo "APT インストール失敗: ${package}" >&2
+    fi
+  done
+
+  if [ "${#failed_packages[@]}" -gt 0 ]; then
+    echo "次の APT パッケージ導入に失敗しました: ${failed_packages[*]}" >&2
+    echo "ネットワークやAPTミラー状態を確認し、失敗パッケージを個別に再実行してください。" >&2
+    exit 1
+  fi
+}
+
+ensure_portaudio_build_env() {
+  if ! pkg-config --exists portaudio-2.0; then
+    echo "portaudio-2.0 が見つかりません。APT インストールに失敗している可能性があります。" >&2
+    echo 'sudo apt update && sudo apt install -y portaudio19-dev pkg-config を確認してください。' >&2
+    exit 1
+  fi
+
+  local cflags
+  local libs
+  cflags="$(pkg-config --cflags portaudio-2.0)"
+  libs="$(pkg-config --libs portaudio-2.0)"
+
+  if [ ! -f /usr/include/portaudio.h ] && [ ! -f /usr/local/include/portaudio.h ] && [ ! -f /usr/include/aarch64-linux-gnu/portaudio.h ]; then
+    echo "portaudio.h が見つかりません。portaudio19-dev が正しく導入されていない可能性があります。" >&2
+    exit 1
+  fi
+
+  echo "PyAudio ビルド用 CFLAGS: ${cflags:-<none>}"
+  echo "PyAudio ビルド用 LDFLAGS: ${libs:-<none>}"
+
+  export CFLAGS="${CFLAGS:-} ${cflags}"
+  export CPPFLAGS="${CPPFLAGS:-} ${cflags}"
+  export LDFLAGS="${LDFLAGS:-} ${libs}"
 }
 
 ensure_apt_packages python3-venv python3-full build-essential pkg-config portaudio19-dev
+ensure_portaudio_build_env
 
 echo "[1/4] Python 仮想環境を準備します..."
 if [ ! -d "$VENV_DIR" ]; then

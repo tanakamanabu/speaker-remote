@@ -60,6 +60,13 @@ python client.py
 SERVER_URL=http://192.168.1.40:8000/voice WAKEWORD_THRESHOLD=0.6 python client.py
 ```
 
+推論バックエンドは既定で `tflite` を使います（安定動作用）。
+必要な場合のみ `onnx` へ切り替えてください。
+
+```bash
+OWW_INFERENCE_FRAMEWORK=onnx python client.py
+```
+
 ---
 
 ## 動作フロー
@@ -154,6 +161,8 @@ python -m pip --version
 ### `PyAudio` のインストールで `portaudio.h` エラーが出る場合
 
 `setup.sh` は `build-essential`（gcc など）/ `portaudio19-dev` / `pkg-config` を事前に自動インストールしてから Python 依存を入れます。
+さらに `pkg-config` から取得した `CFLAGS` / `LDFLAGS` を使って `PyAudio` をビルドするため、ヘッダ探索パス差異がある環境でも失敗しにくくしています。
+APT パッケージは1件ずつ導入し、失敗したパッケージ名を表示して停止します。
 このため通常は手動対応不要です。`sudo` が使えない環境では root で `setup.sh` を実行してください。
 
 ```bash

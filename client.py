@@ -10,6 +10,7 @@ from openwakeword.utils import download_models
 
 SERVER_URL = os.getenv("SERVER_URL", "http://192.168.1.40:8000/voice")
 WAKEWORD_THRESHOLD = float(os.getenv("WAKEWORD_THRESHOLD", "0.5"))
+OWW_INFERENCE_FRAMEWORK = os.getenv("OWW_INFERENCE_FRAMEWORK", "tflite")
 SAMPLE_RATE = 16000
 CHUNK_SIZE = 1280
 
@@ -43,7 +44,8 @@ def play_audio(data):
 
 
 def wait_for_wakeword(threshold=WAKEWORD_THRESHOLD):
-    model = Model()
+    print(f"openwakeword 推論バックエンド: {OWW_INFERENCE_FRAMEWORK}")
+    model = Model(inference_framework=OWW_INFERENCE_FRAMEWORK)
 
     audio = pyaudio.PyAudio()
     stream = audio.open(

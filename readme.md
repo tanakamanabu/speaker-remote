@@ -137,6 +137,7 @@ venv/bin/python -m pip install -r requirements.txt
 
 それでも `externally-managed-environment` が出る場合は、壊れた仮想環境を掴んでいる可能性があります。
 `setup.sh` は `uv` で Python 3.11 を用意して仮想環境を再構築するため、次で作り直してください。
+（`uv venv --seed` で `pip` も同時に用意します）
 
 ```bash
 rm -rf venv

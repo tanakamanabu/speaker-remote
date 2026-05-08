@@ -111,7 +111,7 @@ ensure_portaudio_build_env
 
 echo "[1/4] Python 仮想環境を準備します..."
 "$UV_BIN" python install 3.11
-"$UV_BIN" venv --python 3.11 "$VENV_DIR"
+"$UV_BIN" venv --python 3.11 --seed "$VENV_DIR"
 
 echo "[2/4] 依存パッケージをインストールします..."
 VENV_PYTHON="$VENV_DIR/bin/python"
@@ -127,15 +127,7 @@ if ! "$VENV_PYTHON" -m pip --version >/dev/null 2>&1; then
 fi
 
 PIP_VERSION_OUTPUT="$($VENV_PYTHON -m pip --version 2>/dev/null || true)"
-case "$PIP_VERSION_OUTPUT" in
-  *"$VENV_DIR"*) ;;
-  *)
-    echo "仮想環境外の pip を参照している可能性があります: $PIP_VERSION_OUTPUT" >&2
-    echo "次を実行してから venv を作り直してください:" >&2
-    echo "  rm -rf ${VENV_DIR} && bash setup.sh" >&2
-    exit 1
-    ;;
-esac
+echo "pip バージョン情報: $PIP_VERSION_OUTPUT"
 
 "$VENV_PYTHON" -m pip install --upgrade pip
 PIP_EXTRA_INDEX_URL="${PIP_EXTRA_INDEX_URL:-https://www.piwheels.org/simple}"

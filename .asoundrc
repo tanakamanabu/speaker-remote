@@ -1,0 +1,20 @@
+pcm.!default {
+  type asym
+  playback.pcm "speaker"
+  capture.pcm "mic"
+}
+
+pcm.speaker {
+  type plug
+  slave.pcm "plughw:CARD=Speaker,DEV=0"
+}
+
+pcm.mic {
+  type plug
+  slave.pcm "plughw:CARD=ArrayUAC10,DEV=0"
+}
+
+ctl.!default {
+  type hw
+  card "Speaker"
+}

@@ -33,7 +33,7 @@ ensure_apt_packages() {
   run_as_root apt install -y "${packages[@]}"
 }
 
-ensure_apt_packages python3-venv python3-full pkg-config portaudio19-dev
+ensure_apt_packages python3-venv python3-full build-essential pkg-config portaudio19-dev
 
 echo "[1/4] Python 仮想環境を準備します..."
 if [ ! -d "$VENV_DIR" ]; then

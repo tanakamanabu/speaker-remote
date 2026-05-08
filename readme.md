@@ -153,7 +153,7 @@ python -m pip --version
 
 ### `PyAudio` のインストールで `portaudio.h` エラーが出る場合
 
-`setup.sh` は `portaudio19-dev`（および `pkg-config`）を事前に自動インストールしてから Python 依存を入れます。
+`setup.sh` は `build-essential`（gcc など）/ `portaudio19-dev` / `pkg-config` を事前に自動インストールしてから Python 依存を入れます。
 このため通常は手動対応不要です。`sudo` が使えない環境では root で `setup.sh` を実行してください。
 
 ```bash

@@ -45,7 +45,13 @@ esac
 
 "$VENV_PYTHON" -m pip install --upgrade pip
 PIP_EXTRA_INDEX_URL="${PIP_EXTRA_INDEX_URL:-https://www.piwheels.org/simple}"
-"$VENV_PYTHON" -m pip install --prefer-binary --extra-index-url "$PIP_EXTRA_INDEX_URL" -r requirements.txt
+TMPDIR="${TMPDIR:-/var/tmp}"
+if [ ! -d "$TMPDIR" ]; then
+  echo "TMPDIR が存在しないため作成します: $TMPDIR"
+  mkdir -p "$TMPDIR"
+fi
+echo "pip 一時ディレクトリ: $TMPDIR"
+TMPDIR="$TMPDIR" "$VENV_PYTHON" -m pip install --no-cache-dir --prefer-binary --extra-index-url "$PIP_EXTRA_INDEX_URL" -r requirements.txt
 
 echo "[3/4] 音声デバイス設定（~/.asoundrc）を作成/更新します..."
 cat > "$ASOUNDRC_PATH" <<EOF

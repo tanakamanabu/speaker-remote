@@ -153,6 +153,17 @@ python -m pip --version
 `requirements.txt` では `numpy<2` を指定しています。
 さらに `setup.sh` は binary wheel を優先し、既定で `piwheels` を使うため、ソースビルド由来の失敗を回避しやすくなっています。
 
+### `No space left on device` が出る場合
+
+`df -h` で `/` に空きがあっても、`/tmp` が小さい（tmpfs）環境だと `pip` の一時展開で容量不足になることがあります。
+`setup.sh` は `TMPDIR` を使って一時ディレクトリを切り替えられるので、次を実行してください。
+
+```bash
+TMPDIR=/var/tmp bash setup.sh
+```
+
+`/tmp` を使いたい場合は、キャッシュ削減のため `--no-cache-dir`（`setup.sh` に設定済み）を利用してください。
+
 ---
 
 ### デバイス番号の変動

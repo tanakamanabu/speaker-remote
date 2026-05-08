@@ -22,6 +22,27 @@ if [ ! -x "$VENV_PYTHON" ]; then
   exit 1
 fi
 
+if ! "$VENV_PYTHON" -m pip --version >/dev/null 2>&1; then
+  echo "仮想環境内の pip が見つかりません。" >&2
+  echo "Raspberry Pi OS では python3-venv / python3-full が不足していると発生します。" >&2
+  echo "次を実行してから venv を作り直してください:" >&2
+  echo "  sudo apt update && sudo apt install -y python3-venv python3-full" >&2
+  echo "  rm -rf ${VENV_DIR} && bash setup.sh" >&2
+  exit 1
+fi
+
+PIP_VERSION_OUTPUT="$($VENV_PYTHON -m pip --version 2>/dev/null || true)"
+case "$PIP_VERSION_OUTPUT" in
+  *"$VENV_DIR"*) ;;
+  *)
+    echo "仮想環境外の pip を参照している可能性があります: $PIP_VERSION_OUTPUT" >&2
+    echo "次を実行してから venv を作り直してください:" >&2
+    echo "  sudo apt update && sudo apt install -y python3-venv python3-full" >&2
+    echo "  rm -rf ${VENV_DIR} && bash setup.sh" >&2
+    exit 1
+    ;;
+esac
+
 "$VENV_PYTHON" -m pip install --upgrade pip
 PIP_EXTRA_INDEX_URL="${PIP_EXTRA_INDEX_URL:-https://www.piwheels.org/simple}"
 "$VENV_PYTHON" -m pip install --prefer-binary --extra-index-url "$PIP_EXTRA_INDEX_URL" -r requirements.txt

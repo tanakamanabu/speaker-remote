@@ -1,7 +1,7 @@
 # Raspberry Pi 音声クライアント
 
 ラズパイ上で動作する、シンプルな音声クライアントです。
-マイクで録音 → サーバーへHTTP送信 → 応答音声を再生、という最小構成を実装しています。
+`openwakeword` でウェイクワードを検知したら録音を開始し、サーバーへ送信して応答音声を再生します。
 
 ---
 
@@ -26,42 +26,26 @@ voice/
 
 ## セットアップ
 
-### 1. ディレクトリ作成
+### 0. 1コマンドで実行（推奨）
 
 ```bash
-mkdir ~/voice
-cd ~/voice
+bash setup.sh
 ```
 
----
+依存関係は `requirements.txt` からインストールされます。
+`setup.sh` は `--prefer-binary` で wheel を優先し、既定で `piwheels` を参照して `numpy` のビルド失敗を起きにくくしています。
 
-### 2. 仮想環境の作成
+`piwheels` を使いたくない場合は、環境変数で上書きできます。
 
 ```bash
-python3 -m venv venv
+PIP_EXTRA_INDEX_URL="" bash setup.sh
 ```
 
-有効化：
+必要に応じてデバイス名を環境変数で指定できます。
 
 ```bash
-source venv/bin/activate
+MIC_CARD=ArrayUAC10 SPEAKER_CARD=Speaker bash setup.sh
 ```
-
----
-
-### 3. 依存パッケージ
-
-```bash
-pip install requests
-```
-
----
-
-### 4. client.py 配置
-
-このリポジトリの `client.py` を配置してください。
-
----
 
 ## 実行方法
 
@@ -70,14 +54,21 @@ source venv/bin/activate
 python client.py
 ```
 
+必要に応じて環境変数で挙動を調整できます。
+
+```bash
+SERVER_URL=http://192.168.1.40:8000/voice WAKEWORD_THRESHOLD=0.6 python client.py
+```
+
 ---
 
 ## 動作フロー
 
-1. マイクで音声を録音（arecord）
-2. サーバーへHTTP POST
-3. サーバーから音声（wav）を受信
-4. スピーカーで再生（aplay）
+1. `openwakeword` でウェイクワードを待機
+2. ウェイクワード検知後に音声を録音（arecord）
+3. サーバーへHTTP POST
+4. サーバーから音声（wav）を受信
+5. スピーカーで再生（aplay）
 
 ---
 
@@ -92,6 +83,9 @@ python client.py
 ## 音声デバイス設定（重要）
 
 USBデバイスを固定するため、`~/.asoundrc` を設定してください。
+
+`setup.sh` 実行時に `~/.asoundrc` は自動生成・更新されます。
+手動で設定する場合は以下を利用してください。
 
 ```conf
 pcm.!default {
@@ -127,6 +121,11 @@ ctl.!default {
 Raspberry Pi OS ではグローバルな `pip install` が制限されています。
 必ず仮想環境（venv）を使用してください。
 
+### `numpy` のインストールで失敗する場合
+
+`requirements.txt` では `numpy<2` を指定しています。
+さらに `setup.sh` は binary wheel を優先し、既定で `piwheels` を使うため、ソースビルド由来の失敗を回避しやすくなっています。
+
 ---
 
 ### デバイス番号の変動
@@ -145,7 +144,6 @@ USBの抜き差しで card 番号が変わるため、
 
 ## 今後の拡張
 
-* ウェイクワード対応
 * Whisperによる音声認識
 * VOICEVOXによる音声応答
 * systemdでの常駐化

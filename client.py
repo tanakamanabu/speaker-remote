@@ -1,8 +1,22 @@
+import os
 import subprocess
-import requests
 import uuid
 
-SERVER_URL = "http://192.168.1.40:8000/voice" 
+import numpy as np
+import pyaudio
+import requests
+from openwakeword.model import Model
+from openwakeword.utils import download_models
+
+SERVER_URL = os.getenv("SERVER_URL", "http://192.168.1.40:8000/voice")
+WAKEWORD_THRESHOLD = float(os.getenv("WAKEWORD_THRESHOLD", "0.5"))
+SAMPLE_RATE = 16000
+CHUNK_SIZE = 1280
+
+
+def ensure_wakeword_models():
+    print("openwakeword モデルを確認中...")
+    download_models()
 
 def record(filename="input.wav", duration=3):
     subprocess.run([
@@ -27,15 +41,47 @@ def play_audio(data):
 
     subprocess.run(["aplay", tmp], check=True)
 
+
+def wait_for_wakeword(threshold=WAKEWORD_THRESHOLD):
+    model = Model()
+
+    audio = pyaudio.PyAudio()
+    stream = audio.open(
+        format=pyaudio.paInt16,
+        channels=1,
+        rate=SAMPLE_RATE,
+        input=True,
+        frames_per_buffer=CHUNK_SIZE,
+    )
+
+    print("ウェイクワード待機中...")
+
+    try:
+        while True:
+            frame = np.frombuffer(stream.read(CHUNK_SIZE, exception_on_overflow=False), dtype=np.int16)
+            prediction = model.predict(frame)
+
+            if any(score >= threshold for score in prediction.values()):
+                return
+    finally:
+        stream.stop_stream()
+        stream.close()
+        audio.terminate()
+
 def main():
-    print("録音開始")
-    record()
+    ensure_wakeword_models()
 
-    print("送信")
-    response_audio = send_audio("input.wav")
+    while True:
+        wait_for_wakeword()
 
-    print("再生")
-    play_audio(response_audio)
+        print("ウェイクワード検知: 録音開始")
+        record()
+
+        print("送信")
+        response_audio = send_audio("input.wav")
+
+        print("再生")
+        play_audio(response_audio)
 
 if __name__ == "__main__":
     main()

@@ -75,11 +75,41 @@ def wait_for_wakeword(threshold=WAKEWORD_THRESHOLD):
         stream.close()
         audio.terminate()
 
+
+def run_wakeword_loop(threshold=WAKEWORD_THRESHOLD):
+    print(f"openwakeword 推論バックエンド: {OWW_INFERENCE_FRAMEWORK}")
+    print(f"openwakeword モデル: {WAKEWORD_MODEL_PATH}")
+    model = Model(
+        wakeword_models=[WAKEWORD_MODEL_PATH],
+        inference_framework=OWW_INFERENCE_FRAMEWORK,
+    )
+
+    audio = pyaudio.PyAudio()
+    stream = audio.open(
+        format=pyaudio.paInt16,
+        channels=1,
+        rate=SAMPLE_RATE,
+        input=True,
+        frames_per_buffer=CHUNK_SIZE,
+    )
+
+    print("ウェイクワード待機中...")
+    try:
+        while True:
+            frame = np.frombuffer(stream.read(CHUNK_SIZE, exception_on_overflow=False), dtype=np.int16)
+            prediction = model.predict(frame)
+
+            if any(score >= threshold for score in prediction.values()):
+                yield
+    finally:
+        stream.stop_stream()
+        stream.close()
+        audio.terminate()
+
 def main():
     ensure_wakeword_models()
 
-    while True:
-        wait_for_wakeword()
+    for _ in run_wakeword_loop():
 
         print("ウェイクワード検知: 録音開始")
         record()

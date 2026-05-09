@@ -81,14 +81,10 @@ def wait_for_wakeword(threshold=WAKEWORD_THRESHOLD):
 def run_wakeword_loop(threshold=WAKEWORD_THRESHOLD):
     print(f"openwakeword 推論バックエンド: {OWW_INFERENCE_FRAMEWORK}")
     print(f"openwakeword モデル: {WAKEWORD_MODEL_PATH}")
-
-    def create_model():
-        return Model(
-            wakeword_models=[WAKEWORD_MODEL_PATH],
-            inference_framework=OWW_INFERENCE_FRAMEWORK,
-        )
-
-    model = create_model()
+    model = Model(
+        wakeword_models=[WAKEWORD_MODEL_PATH],
+        inference_framework=OWW_INFERENCE_FRAMEWORK,
+    )
 
     audio = None
     stream = None
@@ -126,7 +122,6 @@ def run_wakeword_loop(threshold=WAKEWORD_THRESHOLD):
                 close_input_stream()
                 yield
                 time.sleep(WAKEWORD_COOLDOWN_SEC)
-                model = create_model()
                 open_input_stream()
                 print("ウェイクワード待機中...")
     finally:

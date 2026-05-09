@@ -1,5 +1,6 @@
 import os
 import subprocess
+import time
 import uuid
 
 import numpy as np
@@ -14,6 +15,7 @@ OWW_INFERENCE_FRAMEWORK = os.getenv("OWW_INFERENCE_FRAMEWORK", "tflite")
 WAKEWORD_MODEL_PATH = os.getenv("WAKEWORD_MODEL_PATH", "alexa_v0.1.tflite")
 SAMPLE_RATE = 16000
 CHUNK_SIZE = 1280
+WAKEWORD_COOLDOWN_SEC = float(os.getenv("WAKEWORD_COOLDOWN_SEC", "1.0"))
 
 
 def ensure_wakeword_models():
@@ -79,10 +81,14 @@ def wait_for_wakeword(threshold=WAKEWORD_THRESHOLD):
 def run_wakeword_loop(threshold=WAKEWORD_THRESHOLD):
     print(f"openwakeword 推論バックエンド: {OWW_INFERENCE_FRAMEWORK}")
     print(f"openwakeword モデル: {WAKEWORD_MODEL_PATH}")
-    model = Model(
-        wakeword_models=[WAKEWORD_MODEL_PATH],
-        inference_framework=OWW_INFERENCE_FRAMEWORK,
-    )
+
+    def create_model():
+        return Model(
+            wakeword_models=[WAKEWORD_MODEL_PATH],
+            inference_framework=OWW_INFERENCE_FRAMEWORK,
+        )
+
+    model = create_model()
 
     audio = None
     stream = None
@@ -119,7 +125,10 @@ def run_wakeword_loop(threshold=WAKEWORD_THRESHOLD):
             if any(score >= threshold for score in prediction.values()):
                 close_input_stream()
                 yield
+                time.sleep(WAKEWORD_COOLDOWN_SEC)
+                model = create_model()
                 open_input_stream()
+                print("ウェイクワード待機中...")
     finally:
         close_input_stream()
 

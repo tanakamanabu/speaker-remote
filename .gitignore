@@ -12,3 +12,7 @@ venv/
 # OS
 .DS_Store
 Thumbs.db
+
+# temp file
+input.wav
+vosk-model-ja*

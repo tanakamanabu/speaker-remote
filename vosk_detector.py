@@ -4,7 +4,7 @@ import wave
 
 from vosk import KaldiRecognizer, Model
 
-VOSK_MODEL_PATH = os.getenv("VOSK_MODEL_PATH", "vosk-model-ja-0.22")
+VOSK_MODEL_PATH = os.getenv("VOSK_MODEL_PATH", "vosk-model-small-ja-0.22")
 FIXED_COMMANDS = [
     "ライトオン",
     "ライトオフ",
@@ -15,10 +15,20 @@ FIXED_COMMANDS = [
     "パソコンつけて",
 ]
 
+_VOSK_MODEL = None
+
+
+def get_vosk_model():
+    global _VOSK_MODEL
+    if _VOSK_MODEL is None:
+        print(f"Vosk モデルを読み込みます: {VOSK_MODEL_PATH}")
+        _VOSK_MODEL = Model(VOSK_MODEL_PATH)
+    return _VOSK_MODEL
+
 
 def detect_word_with_vosk(filename="input.wav"):
     print(f"Vosk モデル: {VOSK_MODEL_PATH}")
-    model = Model(VOSK_MODEL_PATH)
+    model = get_vosk_model()
 
     with wave.open(filename, "rb") as wav_file:
         recognizer = KaldiRecognizer(model, wav_file.getframerate())

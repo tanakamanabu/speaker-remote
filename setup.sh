@@ -9,8 +9,8 @@ VENV_DIR="${VENV_DIR:-venv}"
 MIC_CARD="${MIC_CARD:-ArrayUAC10}"
 SPEAKER_CARD="${SPEAKER_CARD:-Speaker}"
 ASOUNDRC_PATH="${ASOUNDRC_PATH:-$HOME/.asoundrc}"
-VOSK_MODEL_PATH="${VOSK_MODEL_PATH:-vosk-model-ja-0.22}"
-VOSK_MODEL_ZIP_URL="${VOSK_MODEL_ZIP_URL:-https://alphacephei.com/vosk/models/vosk-model-ja-0.22.zip}"
+VOSK_MODEL_PATH="${VOSK_MODEL_PATH:-vosk-model-small-ja-0.22}"
+VOSK_MODEL_ZIP_URL="${VOSK_MODEL_ZIP_URL:-https://alphacephei.com/vosk/models/vosk-model-small-ja-0.22.zip}"
 UV_BIN=""
 
 run_as_root() {

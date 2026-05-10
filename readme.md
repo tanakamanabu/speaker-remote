@@ -47,6 +47,13 @@ PIP_EXTRA_INDEX_URL="" bash setup.sh
 MIC_CARD=ArrayUAC10 SPEAKER_CARD=Speaker bash setup.sh
 ```
 
+Vosk モデルは既定で軽量な `vosk-model-small-ja-0.22` を取得します。
+メモリに余裕がある環境でフルモデルを使う場合は次のように上書きしてください。
+
+```bash
+VOSK_MODEL_PATH=vosk-model-ja-0.22 VOSK_MODEL_ZIP_URL=https://alphacephei.com/vosk/models/vosk-model-ja-0.22.zip bash setup.sh
+```
+
 ## 実行方法
 
 ```bash
@@ -57,7 +64,7 @@ python main.py
 必要に応じて環境変数で挙動を調整できます。
 
 ```bash
-SERVER_URL=http://192.168.1.40:8000/voice WAKEWORD_THRESHOLD=0.6 python main.py
+WAKEWORD_THRESHOLD=0.6 VOSK_MODEL_PATH=vosk-model-small-ja-0.22 python main.py
 ```
 
 Alexa で反応させたい場合は、`alexa_v0.1.tflite` を使って起動してください。
@@ -80,9 +87,7 @@ OWW_INFERENCE_FRAMEWORK=onnx python main.py
 
 1. `openwakeword` でウェイクワードを待機
 2. ウェイクワード検知後に音声を録音（arecord）
-3. サーバーへHTTP POST
-4. サーバーから音声（wav）を受信
-5. スピーカーで再生（aplay）
+3. `Vosk` で固定コマンドを検出
 
 ---
 

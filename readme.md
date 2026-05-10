@@ -8,8 +8,8 @@
 ## 構成
 
 ```
-voice/
-├── client.py          # メインスクリプト
+speaker-remote/
+├── main.py          # メインスクリプト
 ├── venv/              # Python仮想環境
 └── README.md
 ```
@@ -51,27 +51,27 @@ MIC_CARD=ArrayUAC10 SPEAKER_CARD=Speaker bash setup.sh
 
 ```bash
 source venv/bin/activate
-python client.py
+python main.py
 ```
 
 必要に応じて環境変数で挙動を調整できます。
 
 ```bash
-SERVER_URL=http://192.168.1.40:8000/voice WAKEWORD_THRESHOLD=0.6 python client.py
+SERVER_URL=http://192.168.1.40:8000/voice WAKEWORD_THRESHOLD=0.6 python main.py
 ```
 
 Alexa で反応させたい場合は、`alexa_v0.1.tflite` を使って起動してください。
-（同名ファイルを `client.py` と同じディレクトリに置くか、フルパスで指定）
+（同名ファイルを `main.py` と同じディレクトリに置くか、フルパスで指定）
 
 ```bash
-WAKEWORD_MODEL_PATH=alexa_v0.1.tflite python client.py
+WAKEWORD_MODEL_PATH=alexa_v0.1.tflite python main.py
 ```
 
 推論バックエンドは既定で `tflite` を使います（安定動作用）。
 必要な場合のみ `onnx` へ切り替えてください。
 
 ```bash
-OWW_INFERENCE_FRAMEWORK=onnx python client.py
+OWW_INFERENCE_FRAMEWORK=onnx python main.py
 ```
 
 ---

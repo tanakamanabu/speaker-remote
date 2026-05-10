@@ -149,16 +149,17 @@ else
   "$VENV_PYTHON" - "$VOSK_MODEL_ZIP_URL" <<'PY'
 import pathlib
 import sys
-import tempfile
 import urllib.request
 import zipfile
 
 url = sys.argv[1]
-with tempfile.TemporaryDirectory() as tmpdir:
-    zip_path = pathlib.Path(tmpdir) / "vosk_model.zip"
+zip_path = pathlib.Path.cwd() / "vosk_model.zip"
+try:
     urllib.request.urlretrieve(url, zip_path)
     with zipfile.ZipFile(zip_path) as zf:
         zf.extractall(pathlib.Path.cwd())
+finally:
+    zip_path.unlink(missing_ok=True)
 PY
 
   if [ ! -d "$VOSK_MODEL_PATH" ]; then

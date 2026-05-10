@@ -14,6 +14,7 @@ FIXED_COMMANDS = [
     "学習開始",
     "パソコンつけて",
 ]
+VOSK_GRAMMAR = json.dumps(FIXED_COMMANDS + ["[unk]"], ensure_ascii=False)
 
 _VOSK_MODEL = None
 
@@ -31,7 +32,7 @@ def detect_word_with_vosk(filename="input.wav"):
     model = get_vosk_model()
 
     with wave.open(filename, "rb") as wav_file:
-        recognizer = KaldiRecognizer(model, wav_file.getframerate())
+        recognizer = KaldiRecognizer(model, wav_file.getframerate(), VOSK_GRAMMAR)
         recognized_texts = []
 
         while True:

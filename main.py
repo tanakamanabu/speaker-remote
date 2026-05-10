@@ -1,6 +1,6 @@
-from audio import play_audio, record
-from api_client import send_audio_to_voice_api
+from audio import record
 from wakeword import ensure_wakeword_models, run_wakeword_loop
+from vosk_detector import detect_word_with_vosk
 
 
 def main():
@@ -11,11 +11,8 @@ def main():
         print("ウェイクワード検知: 録音開始")
         record()
 
-        print("送信")
-        response_audio = send_audio_to_voice_api("input.wav")
-
-        print("再生")
-        play_audio(response_audio)
+        print("Vosk でワード検出")
+        detect_word_with_vosk("input.wav")
 
 if __name__ == "__main__":
     main()

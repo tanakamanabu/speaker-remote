@@ -9,6 +9,8 @@ VENV_DIR="${VENV_DIR:-venv}"
 MIC_CARD="${MIC_CARD:-ArrayUAC10}"
 SPEAKER_CARD="${SPEAKER_CARD:-Speaker}"
 ASOUNDRC_PATH="${ASOUNDRC_PATH:-$HOME/.asoundrc}"
+VOSK_MODEL_PATH="${VOSK_MODEL_PATH:-vosk-model-ja-0.22}"
+VOSK_MODEL_ZIP_URL="${VOSK_MODEL_ZIP_URL:-https://alphacephei.com/vosk/models/vosk-model-ja-0.22.zip}"
 UV_BIN=""
 
 run_as_root() {
@@ -109,11 +111,11 @@ ensure_apt_packages build-essential pkg-config portaudio19-dev curl
 ensure_uv
 ensure_portaudio_build_env
 
-echo "[1/4] Python 仮想環境を準備します..."
+echo "[1/5] Python 仮想環境を準備します..."
 "$UV_BIN" python install 3.11
 "$UV_BIN" venv --python 3.11 --seed "$VENV_DIR"
 
-echo "[2/4] 依存パッケージをインストールします..."
+echo "[2/5] 依存パッケージをインストールします..."
 VENV_PYTHON="$VENV_DIR/bin/python"
 if [ ! -x "$VENV_PYTHON" ]; then
   echo "仮想環境の Python が見つかりません: $VENV_PYTHON" >&2
@@ -139,7 +141,33 @@ fi
 echo "pip 一時ディレクトリ: $TMPDIR"
 TMPDIR="$TMPDIR" "$VENV_PYTHON" -m pip install --no-cache-dir --prefer-binary --extra-index-url "$PIP_EXTRA_INDEX_URL" -r requirements.txt
 
-echo "[3/4] 音声デバイス設定（~/.asoundrc）を作成/更新します..."
+echo "[3/5] Vosk 日本語モデルを確認します..."
+if [ -d "$VOSK_MODEL_PATH" ]; then
+  echo "Vosk モデルは既に存在します: $VOSK_MODEL_PATH"
+else
+  echo "Vosk モデルをダウンロードします: $VOSK_MODEL_ZIP_URL"
+  "$VENV_PYTHON" - "$VOSK_MODEL_ZIP_URL" <<'PY'
+import pathlib
+import sys
+import tempfile
+import urllib.request
+import zipfile
+
+url = sys.argv[1]
+with tempfile.TemporaryDirectory() as tmpdir:
+    zip_path = pathlib.Path(tmpdir) / "vosk_model.zip"
+    urllib.request.urlretrieve(url, zip_path)
+    with zipfile.ZipFile(zip_path) as zf:
+        zf.extractall(pathlib.Path.cwd())
+PY
+
+  if [ ! -d "$VOSK_MODEL_PATH" ]; then
+    echo "Vosk モデル展開後にディレクトリが見つかりません: $VOSK_MODEL_PATH" >&2
+    exit 1
+  fi
+fi
+
+echo "[4/5] 音声デバイス設定（~/.asoundrc）を作成/更新します..."
 cat > "$ASOUNDRC_PATH" <<EOF
 pcm.!default {
   type asym
@@ -163,9 +191,9 @@ ctl.!default {
 }
 EOF
 
-echo "[4/4] 完了"
+echo "[5/5] 完了"
 echo
 echo "セットアップが完了しました。"
-echo "実行方法: source ${VENV_DIR}/bin/activate && python client.py"
+echo "実行方法: source ${VENV_DIR}/bin/activate && python main.py"
 echo "デバイス名確認: aplay -L / arecord -l"
 echo "必要に応じて MIC_CARD / SPEAKER_CARD を環境変数で指定して再実行してください。"

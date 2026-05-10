@@ -1,5 +1,5 @@
 requests
-numpy
+numpy<2
 PyAudio
 openwakeword
 vosk

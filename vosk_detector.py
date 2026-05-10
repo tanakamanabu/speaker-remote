@@ -5,16 +5,17 @@ import wave
 from vosk import KaldiRecognizer, Model
 
 VOSK_MODEL_PATH = os.getenv("VOSK_MODEL_PATH", "vosk-model-small-ja-0.22")
-FIXED_COMMANDS = [
-    "ライトオン",
-    "ライトオフ",
-    "冷房オン",
-    "暖房オン",
-    "エアコンオフ",
-    "学習開始",
-    "パソコンつけて",
-]
-VOSK_GRAMMAR = json.dumps(FIXED_COMMANDS + ["[unk]"], ensure_ascii=False)
+COMMANDS = {
+    "ライトオン": "ライト オン",
+    "ライトオフ": "ライト オフ",
+    "冷房オン": "冷房 オン",
+    "暖房オン": "暖房 オン",
+    "エアコンオフ": "エアコン オフ",
+    "学習開始": "学習 開始",
+    "パソコンつけて": "パソコン つけて",
+}
+FIXED_COMMANDS = list(COMMANDS.keys())
+VOSK_GRAMMAR = json.dumps(list(COMMANDS.values()) + ["[unk]"], ensure_ascii=False)
 
 _VOSK_MODEL = None
 
@@ -25,6 +26,10 @@ def get_vosk_model():
         print(f"Vosk モデルを読み込みます: {VOSK_MODEL_PATH}")
         _VOSK_MODEL = Model(VOSK_MODEL_PATH)
     return _VOSK_MODEL
+
+
+def normalize_text(text):
+    return text.replace(" ", "").replace("　", "")
 
 
 def detect_word_with_vosk(filename="input.wav"):
@@ -52,7 +57,14 @@ def detect_word_with_vosk(filename="input.wav"):
             recognized_texts.append(final_text)
 
     recognized_text = " ".join(recognized_texts).strip()
-    detected_commands = [command for command in FIXED_COMMANDS if command in recognized_text]
+    normalized_recognized_text = normalize_text(recognized_text)
+
+    detected_commands = []
+    for command in FIXED_COMMANDS:
+        grammar_command = COMMANDS.get(command, command)
+        if normalize_text(command) in normalized_recognized_text or normalize_text(grammar_command) in normalized_recognized_text:
+            detected_commands.append(command)
+
     found = bool(detected_commands)
     if found:
         print(f"Vosk 固定コマンド検出: {', '.join(detected_commands)}")
